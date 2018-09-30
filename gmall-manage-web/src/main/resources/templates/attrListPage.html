@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<table id="dg" class="easyui-datagrid" title="平台属性列表"
+       data-options="toolbar: '#tb', singleSelect:true,collapsible:true">
+    <thead>
+    <tr>
+        <th data-options="field:'id',width:200">平台属性ID</th>
+        <th data-options="field:'attrName',width:200">平台属性名称</th>
+    </tr>
+    </thead>
+</table>
+
+<div id="tb">
+    <a href="javascript:addAttrInfo();" class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true">添加</a>
+    <a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true">编制</a>
+    <a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true">删除</a>
+    <div>
+        一级分类 <select data-options="url:'getCatalog1',valueField:'id',textField:'name',
+             onSelect: function(rec){
+               <!--从新选择一级列表的时候清空二级和三级的选项-->
+              $('#ctg2ForAttrList').combobox('clear');
+              $('#ctg3ForAttrList').combobox('clear');
+              <!--查询出数据的方法getCatalog2和参数id catalog1Id-->
+            var url = 'getCatalog2?catalog1Id='+rec.id;
+               <!--点击了一级列表后触发二级列表 $('#ctg2ForAttrList')以下二级列表同理触发了三级列表-->
+            $('#ctg2ForAttrList').combobox('reload', url);
+        }"
+                     id="ctg1ForAttrList"   class="easyui-combobox" name="state"  style="width:100px;"></select>
+        二级分类 <select data-options="valueField:'id',textField:'name',
+             onSelect: function(rec){
+
+                     $('#ctg3ForAttrList').combobox('clear');
+                        var url = 'getCatalog3?catalog2Id='+rec.id;
+
+                        $('#ctg3ForAttrList').combobox('reload', url);
+                    }"
+                     id="ctg2ForAttrList" class="easyui-combobox" name="state"  style="width:100px;"></select>
+        三级分类 <select data-options="valueField:'id',textField:'name'" id="ctg3ForAttrList" class="easyui-combobox" name="state"  style="width:100px;"></select>
+
+        <a href="javascript:reloadAttrList();"  class="easyui-linkbutton" data-options="iconCls:'icon-search'">刷新属性列表</a>
+
+    </div>
+</div>
+
+<!--添加的弹出框-->
+<div id="dlg" class="easyui-dialog" title="编辑属性" style="width:600px;height:500px;"
+     closed="true"  data-options="iconCls:'icon-save',resizable:true,modal:true" buttons="#bb" >
+    <form id="attrForm">
+        <br/>
+        <label>属性名称:</label>
+        <input  id="attrName" name="attrName" class="easyui-textbox" data-options="" style="width:100px"/>
+        <input  id="attrId" name="attrId" type="hidden"  />
+        <br/><br/>
+        <table id="dg_av" class="easyui-datagrid" title="属性值列表"></table>
+    </form>
+</div>
+
+<!--添加按钮的保存和关闭按钮 在jQUery EasyUi api的对话窗口的buttons的案例-->
+</div>
+<div id="bb">
+    <a href="javascript:save_attr();" class="easyui-linkbutton">保存</a>
+    <a href="#" class="easyui-linkbutton">关闭</a>
+</div>
+
+<!--获取属性的值  -->
+<script language="JavaScript">
+
+     function save_attr() {
+
+         var baseAttrInfo ={};
+          //三级分类id
+       var catalog3Id =  $("#ctg3ForAttrList").combobox("getValue");
+         baseAttrInfo["catalog3Id"] = catalog3Id;   //把三级id做参数封装起来
+
+         //获取属性的名称
+      var  attrName =  $("#attrName").textbox("getValue");
+         baseAttrInfo["attrName"] = attrName; //这种写法相当于{"attrName":"aaaaaaa"//把 属性值的名称做参数封装起来
+
+         //获取dg_av中已经添加的属性的值,getRo 方法是 获取当前所有行json对象
+       var roes =  $("#dg_av").datagrid("getRows");
+       $(roes).each(function (i,json) {
+         //获取属性值名称
+           var  valueName =  json.valueName;
+           //属性值集合//数据都封装在到baseAttrInfo中，然后这里就遍历出全部数据
+           baseAttrInfo["attrValueList["+ i +"].valueName"] = valueName;
+
+
+     });
+
+          //异步将属性和属性值的数据封装好提交给后台
+         //$.post请求  $.post("url",{参数对象},请求数据function(){
+         $.get("saveAttr",baseAttrInfo,function(data){
+             alert(data);
+         });
+
+         //关闭对话框
+         $("#dlg").dialog("close");
+     }
+
+
+
+
+
+
+    //获取三级列表的属性
+    function reloadAttrList() {
+        //获取三级分类的id   catalog3Id
+        var catalog3Id  =  $("#ctg3ForAttrList").combobox("getValue");
+        //根据id加载数据,加载远程数据到dg中
+        $("#dg").datagrid({
+
+            url:"getAttrListByCtg3?catalog3Id=" + catalog3Id
+        });
+    }
+
+    function addAttrInfo() {
+        //获取三级分类id
+        var catalog3Id  =  $("#ctg3ForAttrList").combobox("getValue");
+        if (catalog3Id){
+
+        }else{
+            var catalog3Id  ="61";
+        }
+
+        $("#dlg").dialog("open");
+        //调用属性添加对话框的初始化函数
+        initAttrValueDatagrid();
+    }
+
+    function initAttrValueDatagrid() {
+        datagrid =   $('#dg_av').datagrid({
+            toolbar:[{
+                //添加按钮
+                iconCls:'icon-add',
+                handler:function(){
+                   //追加新的一行
+                    $('#dg_av').datagrid('appendRow',{
+                        id: '',
+                        valueName: '新添加的行'
+                    });
+                }
+            },'-',{
+                //删除按钮
+                iconCls:'icon-remove',
+                handler:function(){
+                   //删除选中的行，分三步，1获取选中的行，2 获取选中行的索引，3按索引删除
+                 var hang =   $('#dg_av').datagrid('getSelected');   //1
+                 var suoyin =   $('#dg_av').datagrid('getRowIndex',hang); //2
+
+                         $('#dg_av').datagrid('deleteRow',suoyin);  //3
+
+
+                }
+            }],
+            columns:[[
+                {field:'id',title:'属性值编号',width:100},
+                {field:'valueName',title:'属性值名称',width:100,editor:{
+                    type:"validatebox",option:{
+                        required:true
+                    }
+                }}
+            ]],
+            onDblClickRow: function (rowIndex, rowData) {
+                //双击开启编辑行
+                datagrid.datagrid("beginEdit", rowIndex);
+                //设定当失去焦点时,退出编辑状态
+                var valueName = rowData.valueName;
+                $("input.datagrid-editable-input").val(valueName).bind("blur",function(evt){
+                    datagrid.datagrid('endEdit',rowIndex);
+                });
+            }
+        });
+    }
+
+
+</script>
+
+
+</body>
+</html>

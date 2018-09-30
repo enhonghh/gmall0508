@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.gmall.manage.mapper.SkuSaleAttrValueMapper">
+    <select id="selectSpuSaleAttrListCheckBySku"  resultMap="selectSpuSaleAttrListCheckBySkuMap">
+           SELECT
+                sa.id AS sa_id,
+                sa.*, sv.id AS sv_id,
+                sv.*, ssv.sku_id,
+                #加判断语句，如果ssv.sku_id 有值就赋值1 没有就0 在后面再加个字段 isChecked
+            IF (ssv.sku_id, 1, 0) AS isChecked
+            FROM
+                spu_sale_attr sa
+            INNER JOIN spu_sale_attr_value sv ON sa.sale_attr_id = sv.sale_attr_id
+            AND sa.spu_id = sv.spu_id
+            AND sa.spu_id = #{spuId}
+            LEFT JOIN sku_sale_attr_value ssv ON sa.sale_attr_id = ssv.sale_attr_id
+            AND sv.sale_attr_id = ssv.sale_attr_id
+            AND sv.id = ssv.sale_attr_value_id
+            AND ssv.sku_id = #{skuId}
+    </select>
+    
+    <resultMap id="selectSpuSaleAttrListCheckBySkuMap" type="com.atguigu.gmall.bean.SpuSaleAttr" autoMapping="true">
+
+              <result column="sa_id" property="id"></result>
+               <collection property="spuSaleAttrValueList" ofType="com.atguigu.gmall.bean.SpuSaleAttrValue" autoMapping="true">
+
+                   <result column="sv_id" property="id"></result>
+               </collection>
+
+    </resultMap>
+
+    <select id="selectSkuSaleAttrValueListBySpu" parameterType="int" resultMap="selectSkuSaleAttrValueListBySpuMap">
+
+        SELECT
+            sku.id AS sku_id,
+            sku.*,
+            ssav.id as sku_sale_attr_value_id ,ssav.*
+        FROM
+            sku_info sku,
+            sku_sale_attr_value ssav
+        WHERE
+           /* #通过sku.id =ssav.skuId得到颜色容量的信息*/
+            sku.id = ssav.sku_id
+            /* #通过spu_id获取spu属性信息*/
+        AND sku.spu_id = #{spuId}
+
+    </select>
+
+    <resultMap id="selectSkuSaleAttrValueListBySpuMap" type="com.atguigu.gmall.bean.SkuInfo" autoMapping="true">
+         <result property="id" column="sku_id" ></result>
+
+         <collection property="skuSaleAttrValueList" ofType="com.atguigu.gmall.bean.SkuSaleAttrValue" autoMapping="true">
+
+             <result property="id" column="sku_sale_attr_value_id" ></result>
+         </collection>
+
+    </resultMap>
+</mapper>

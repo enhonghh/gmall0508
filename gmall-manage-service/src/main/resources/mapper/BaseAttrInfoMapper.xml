@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.gmall.manage.mapper.BaseAttrInfoMapper">
+    <select id="selectAttrListByValueId" parameterType="String" resultMap="selectAttrListByValueIdMap">
+           SELECT
+            attr.id AS attr_id,
+            val.id AS val_id,
+            attr.*,
+            val.*
+        FROM
+            base_attr_info attr,
+            base_attr_value val
+        WHERE
+            attr.id = val.attr_id
+        AND val.id IN (${join})
+
+    </select>
+
+    <!--autoMapping="true"自动注入的前提要设置查询id  attr.id AS attr_id, val.id AS val_id,-->
+
+    <resultMap id="selectAttrListByValueIdMap" type="com.atguigu.gmall.bean.BaseAttrInfo" autoMapping="true">
+       <!--property 是按id查询 column="attr_id"是自定义查询的id，这样才可以自动映射 -->
+        <result column="attr_id" property="id"></result>
+         <!--ofType 是BaseAttrInfo 里面的集合 BaseAttrValue property 是BaseAttrValue集合的名字-->
+        <collection property="attrValueList" ofType="com.atguigu.gmall.bean.BaseAttrValue" autoMapping="true">
+            <!--映射关系和BaseAttrInfo一样用result-->
+            <result column="val_id" property="id"></result>
+        </collection>
+
+
+    </resultMap>
+    
+
+</mapper>

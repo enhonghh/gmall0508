@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+
+    <h1>thymeleaf 是html页面表情的扩展标签</h1><br>
+     取值: <input type="text" th:value="${hello}"></br>
+     取值: <div th:text="${hello}">我是div快的内容</div></br></br>
+
+循环</br>
+<div th:each="string:${list}" th:text="${string}">div中的内容</div>
+<input type="" th:each="string:${list}" th:value="${string}">
+
+
+<h3>判断</h3>
+<div th:if="${1==1}">1=1</div> <!-- true 显示1=1 false 不显示-->
+<!-- {ifFllag== '1'为true 显示true ，为false显示false 不显示1-1-->
+<div th:text="(${ifFlag == '1'})?'true':'false'">1=1</div>
+
+
+<h3>js函数调用(调用test方法传入参数)</h3>
+<!-- 第一单引号是告诉th中间的是JavaScript的表达式
+   \' 第一个斜杆单引号是参数的引号
+-->
+
+<a th:href=" 'JavaScript:test(\''+${hello}+'\')'">点我</a>
+
+
+
+<script language="JavaScript">
+    function test(param) {
+        alert("test方法" + param);
+    }
+
+</script>
+
+
+</body>
+</html>
